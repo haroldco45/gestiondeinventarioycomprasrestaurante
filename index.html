@@ -3,106 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventario Inteligente - Restaurante</title>
+    <title>Sistema de Reposición - Vibras Positivas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
-<body class="bg-gray-100 p-4 md:p-8">
+<body class="bg-slate-50 p-4 md:p-10 font-sans">
 
-    <div class="max-w-6xl mx-auto bg-white p-6 rounded-xl shadow-xl">
-        <header class="mb-6 border-b pb-4">
-            <h1 class="text-3xl font-bold text-gray-800">Control de Insumos y Compras</h1>
-            <p class="text-blue-600 font-medium italic">Ajuste automático por unidad de empaque</p>
+    <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-2xl border-t-8 border-indigo-600">
+        <header class="mb-8">
+            <h1 class="text-3xl font-black text-slate-800">Control de Existencias</h1>
+            <p class="text-slate-500">Alimenta el inventario final y el sistema calculará la compra.</p>
         </header>
         
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 bg-blue-50 p-6 rounded-lg border border-blue-200">
-            <div class="md:col-span-2">
-                <label class="block text-xs font-bold uppercase text-gray-600">Insumo</label>
-                <input type="text" id="producto" class="w-full p-2 border rounded" placeholder="Ej: Huevos">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 bg-indigo-50 p-6 rounded-xl border border-indigo-100">
+            <div class="col-span-1 md:col-span-2">
+                <label class="block text-sm font-bold text-slate-700 mb-1">Insumo / Materia Prima</label>
+                <input type="text" id="producto" class="w-full p-3 border-2 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none" placeholder="Ej: Huevos, Arroz, Carne...">
             </div>
+            
             <div>
-                <label class="block text-xs font-bold uppercase text-gray-600 italic text-blue-700">Viene por (Ej: 30)</label>
-                <input type="number" id="unidadEmpaque" class="w-full p-2 border border-blue-400 rounded bg-white" value="30">
+                <label class="block text-sm font-bold text-slate-700 mb-1">Stock de Reserva (Lo que DEBE haber)</label>
+                <input type="number" id="stockBasico" class="w-full p-3 border-2 rounded-lg outline-none" placeholder="15">
             </div>
+
             <div>
-                <label class="block text-xs font-bold uppercase text-gray-600">Stock Reserva</label>
-                <input type="number" id="stockBasico" class="w-full p-2 border rounded" value="15">
+                <label class="block text-sm font-bold text-indigo-700 mb-1">Inventario Final (Lo que CONTÉ hoy)</label>
+                <input type="number" id="invFinal" class="w-full p-3 border-2 border-indigo-300 rounded-lg outline-none bg-white font-bold text-lg" placeholder="0">
             </div>
+
             <div>
-                <label class="block text-xs font-bold uppercase text-gray-600">Inv. Inicial</label>
-                <input type="number" id="invInicial" class="w-full p-2 border rounded" value="0">
+                <label class="block text-sm font-bold text-slate-700 mb-1">Presentación de Compra (Ej: 30)</label>
+                <input type="number" id="unidadEmpaque" class="w-full p-3 border-2 rounded-lg outline-none" value="30">
             </div>
-            <div>
-                <label class="block text-xs font-bold uppercase text-gray-600 text-green-700">Entradas (+)</label>
-                <input type="number" id="entradas" class="w-full p-2 border rounded" value="0">
-            </div>
-            <div>
-                <label class="block text-xs font-bold uppercase text-gray-600 text-red-700">Salidas (-)</label>
-                <input type="number" id="salidas" class="w-full p-2 border rounded" value="0">
-            </div>
-            <div class="md:col-span-2 flex items-end">
-                <button onclick="agregarAlKardex()" class="w-full bg-blue-800 text-white font-bold py-2 rounded hover:bg-blue-900 shadow">
-                    Calcular y Registrar
+
+            <div class="flex items-end">
+                <button onclick="procesarConteo()" class="w-full bg-indigo-600 text-white font-black py-4 rounded-lg hover:bg-indigo-700 transition-all shadow-lg transform hover:scale-[1.02]">
+                    REGISTRAR CONTEO
                 </button>
             </div>
         </div>
 
-        <div class="overflow-x-auto mb-6">
-            <table class="w-full border-collapse" id="tablaKardex">
-                <thead class="bg-gray-800 text-white text-sm">
+        <div class="overflow-x-auto rounded-lg border border-slate-200 mb-6">
+            <table class="w-full text-left" id="tablaKardex">
+                <thead class="bg-slate-800 text-white uppercase text-xs">
                     <tr>
-                        <th class="p-3 text-left">Producto</th>
-                        <th class="p-3">Existencia</th>
-                        <th class="p-3">Reserva</th>
-                        <th class="p-3">Faltante Real</th>
-                        <th class="p-3 bg-orange-600 text-white">PEDIDO SUGERIDO (Empaques)</th>
+                        <th class="p-4">Producto</th>
+                        <th class="p-4 text-center">Físico Actual</th>
+                        <th class="p-4 text-center">Reserva</th>
+                        <th class="p-4 text-center text-orange-400">PEDIDO (WhatsApp)</th>
                     </tr>
                 </thead>
-                <tbody id="cuerpoTabla" class="text-center divide-y divide-gray-200"></tbody>
+                <tbody id="cuerpoTabla" class="text-slate-700 divide-y divide-slate-100">
+                    </tbody>
             </table>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <button onclick="exportarExcel()" class="bg-gray-700 text-white font-bold py-3 rounded-lg hover:bg-black transition">
-                📥 Descargar Excel para Auditoría
+            <button onclick="exportarExcel()" class="bg-slate-200 text-slate-800 font-bold py-3 rounded-xl hover:bg-slate-300 flex justify-center items-center gap-2">
+                📂 Descargar Kardex (Excel)
             </button>
-            <button onclick="enviarWhatsApp()" class="bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 shadow-lg transition">
-                📲 Enviar Compras por WhatsApp
+            <button onclick="enviarWhatsApp()" class="bg-green-500 text-white font-bold py-3 rounded-xl hover:bg-green-600 shadow-lg flex justify-center items-center gap-2">
+                💬 Enviar Pedido a Compras
             </button>
         </div>
 
-        <footer class="mt-12 text-center text-xs text-gray-400">
+        <footer class="mt-12 text-center text-[10px] text-slate-400 tracking-widest uppercase">
             app desarrollada por vibras positivas derecho de autor (3117700431)
         </footer>
     </div>
 
     <script>
-        let inventario = [];
+        let datosInventario = [];
 
-        function agregarAlKardex() {
+        function procesarConteo() {
             const prod = document.getElementById('producto').value;
+            const reserva = parseFloat(document.getElementById('stockBasico').value) || 0;
+            const fisico = parseFloat(document.getElementById('invFinal').value) || 0;
             const empaque = parseFloat(document.getElementById('unidadEmpaque').value) || 1;
-            const basico = parseFloat(document.getElementById('stockBasico').value) || 0;
-            const inicial = parseFloat(document.getElementById('invInicial').value) || 0;
-            const ent = parseFloat(document.getElementById('entradas').value) || 0;
-            const sal = parseFloat(document.getElementById('salidas').value) || 0;
 
-            if(!prod) return alert("Nombre del insumo obligatorio");
+            if(!prod) return alert("Escribe el nombre del producto");
 
-            const existencia = inicial + ent - sal;
-            const faltanteReal = basico > existencia ? (basico - existencia) : 0;
+            // Cálculo: ¿Cuánto falta para llegar a la reserva?
+            const faltanteReal = reserva > fisico ? (reserva - fisico) : 0;
             
-            // Lógica de Redondeo: ¿Cuántos empaques completos necesito para cubrir el faltante?
-            // Math.ceil(14 / 30) = 1 panal.
-            const pedidoSugerido = faltanteReal > 0 ? Math.ceil(faltanteReal / empaque) : 0;
+            // Cálculo: ¿Cuántos empaques completos pido?
+            const unidadesAPedir = faltanteReal > 0 ? Math.ceil(faltanteReal / empaque) : 0;
 
-            inventario.push({
+            datosInventario.push({
                 producto: prod,
-                unidad_empaque: empaque,
-                existencia: existencia,
-                reserva: basico,
-                faltante_unidades: faltanteReal,
-                comprar_empaques: pedidoSugerido
+                existencia_fisica: fisico,
+                stock_reserva: reserva,
+                faltante_real: faltanteReal,
+                empaques_a_comprar: unidadesAPedir,
+                unidad_presentacion: empaque
             });
 
             actualizarVista();
@@ -112,35 +105,36 @@
         function actualizarVista() {
             const cuerpo = document.getElementById('cuerpoTabla');
             cuerpo.innerHTML = "";
-            inventario.forEach(item => {
+            datosInventario.forEach(item => {
                 cuerpo.innerHTML += `
-                    <tr class="hover:bg-gray-50">
-                        <td class="p-3 text-left font-bold">${item.producto}</td>
-                        <td class="p-3 text-blue-600 font-bold">${item.existencia}</td>
-                        <td class="p-3">${item.reserva}</td>
-                        <td class="p-3 text-red-500">${item.faltante_unidades}</td>
-                        <td class="p-3 font-extrabold text-orange-700">${item.comprar_empaques} unidad(es) de ${item.unidad_empaque}</td>
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="p-4 font-bold border-r text-slate-900">${item.producto}</td>
+                        <td class="p-4 text-center text-blue-600 font-semibold">${item.existencia_fisica}</td>
+                        <td class="p-4 text-center text-slate-400">${item.stock_reserva}</td>
+                        <td class="p-4 text-center font-black text-orange-600 bg-orange-50">
+                            ${item.empaques_a_comprar > 0 ? item.empaques_a_comprar + ' de ' + item.unidad_presentacion : 'OK'}
+                        </td>
                     </tr>
                 `;
             });
         }
 
         function exportarExcel() {
-            if(inventario.length === 0) return;
-            const ws = XLSX.utils.json_to_sheet(inventario);
+            if(datosInventario.length === 0) return alert("Sin datos");
+            const ws = XLSX.utils.json_to_sheet(datosInventario);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Inventario");
-            XLSX.writeFile(wb, "Reporte_Inventario_VibrasPositivas.xlsx");
+            XLSX.utils.book_append_sheet(wb, ws, "Kardex_Fisico");
+            XLSX.writeFile(wb, "Inventario_Fisico_Restaurante.xlsx");
         }
 
         function enviarWhatsApp() {
-            if(inventario.length === 0) return;
-            let msg = `*LISTA DE COMPRAS - REPOSICIÓN*%0A`;
+            if(datosInventario.length === 0) return;
+            let msg = `*REPORTE DE COMPRAS (VIBRAS POSITIVAS)*%0A`;
             msg += `---------------------------------%0A`;
             
-            inventario.forEach(i => {
-                if(i.comprar_empaques > 0) {
-                    msg += `✅ *${i.producto}*: Comprar *${i.comprar_empaques}* unidad(es) (Presentación de ${i.unidad_empaque})%0A`;
+            datosInventario.forEach(i => {
+                if(i.empaques_a_comprar > 0) {
+                    msg += `🔸 *${i.producto}*: Pedir *${i.empaques_a_comprar}* (Unidad de ${i.unidad_presentacion})%0A`;
                 }
             });
 
@@ -149,9 +143,8 @@
 
         function limpiar() {
             document.getElementById('producto').value = "";
-            document.getElementById('invInicial').value = "0";
-            document.getElementById('entradas').value = "0";
-            document.getElementById('salidas').value = "0";
+            document.getElementById('invFinal').value = "";
+            document.getElementById('producto').focus();
         }
     </script>
 </body>
